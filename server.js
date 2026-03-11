@@ -3,6 +3,7 @@ const multer = require("multer");
 const PDFDocument = require("pdfkit");
 const bwipjs = require("bwip-js");
 const sgMail = require('@sendgrid/mail');
+require('dotenv').config();
 
 const app = express();
 
@@ -14,7 +15,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const codes = new Map();
 
 // Configurar SendGrid con variable de entorno
-sgMail.setApiKey('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');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /* GENERAR CODIGO */
 function generarCodigo() {
