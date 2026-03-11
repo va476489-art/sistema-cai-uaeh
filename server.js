@@ -15,13 +15,8 @@ const codes = new Map();
 
 /* CORREO */
 
-const transporter = nodemailer.createTransport({
-service:"gmail",
-auth:{
-user:"cai.essah.uaeh@gmail.com",
-pass:"zqlx jlhx icap jsba"
-}
-});
+const { Resend } = require('resend');
+const resend = new Resend('re_5yvWt2zp_4MBZotyAMFjSCRJnMX3W9Cie');  // <-- Reemplaza con tu API key real
 
 /* GENERAR CODIGO */
 
@@ -30,50 +25,43 @@ return Math.floor(100000 + Math.random()*900000).toString();
 }
 
 /* ENVIAR CODIGO */
+app.post("/request-code", async (req, res) => {
+  const correo = req.body.correo;
 
-app.post("/request-code",async(req,res)=>{
+  if (!correo.endsWith("@uaeh.edu.mx")) {
+    return res.status(400).json({ error: "Solo se permiten correos institucionales" });
+  }
 
-const correo=req.body.correo;
+  const code = generarCodigo();
 
-if(!correo.endsWith("@uaeh.edu.mx")){
-return res.status(400).json({error:"Solo se permiten correos institucionales"});
-}
+  codes.set(correo, {
+    code,
+    expires: Date.now() + 600000
+  });
 
-const code=generarCodigo();
-
-codes.set(correo,{
-code,
-expires:Date.now()+600000
-});
-
-try{
-
-await transporter.sendMail({
-
-from:"Sistema CAI ESSAH",
-
-to:correo,
-
-subject:"Código de verificación - CAI ESSAH UAEH",
-
-text:`Centro de Autoaprendizaje de Idiomas
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Sistema CAI ESSAH <onboarding@resend.dev>", // Remitente temporal
+      to: [correo],
+      subject: "Código de verificación - CAI ESSAH UAEH",
+      text: `Centro de Autoaprendizaje de Idiomas
 Escuela Superior de Ciudad Sahagún
 Universidad Autónoma del Estado de Hidalgo
 
 Tu código de verificación es: ${code}
 Este código expira en 10 minutos.`
+    });
 
-});
+    if (error) {
+      console.error("Error de Resend:", error);
+      return res.status(500).json({ error: "Error enviando correo" });
+    }
 
-res.json({ok:true});
-
-}catch(error){
-
-console.log(error);
-res.status(500).json({error:"Error enviando correo"});
-
-}
-
+    res.json({ ok: true });
+  } catch (error) {
+    console.log("Excepción:", error);
+    res.status(500).json({ error: "Error enviando correo" });
+  }
 });
 
 /* VERIFICAR CODIGO */
