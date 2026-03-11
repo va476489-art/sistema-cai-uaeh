@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Sistema de Carátulas CAI</title>
+
+<style>
+
+body{
+font-family:Arial, Helvetica, sans-serif;
+margin:0;
+background:#efefef;
+}
+
+/* ENCABEZADO */
+
+.header{
+background:white;
+border-bottom:1px solid #ccc;
+padding:10px 30px;
+display:flex;
+align-items:center;
+}
+
+.logo{
+height:70px;
+margin-right:20px;
+}
+
+.titles h1{
+font-size:20px;
+color:#b30000;
+margin:0;
+}
+
+.titles h2{
+font-size:14px;
+margin:2px 0;
+font-weight:normal;
+}
+
+.titles h3{
+font-size:13px;
+margin:0;
+font-weight:normal;
+}
+
+/* BARRA */
+
+.portalbar{
+background:#e6e6e6;
+border-top:1px solid #ccc;
+border-bottom:1px solid #ccc;
+padding:6px;
+text-align:center;
+font-weight:bold;
+}
+
+/* LOGIN */
+
+.loginbox{
+max-width:400px;
+width:90%;
+margin:70px auto;
+background:white;
+border:1px solid #ccc;
+padding:25px;
+}
+
+/* INPUTS */
+
+input,select{
+width:100%;
+padding:7px;
+margin-top:5px;
+border:1px solid #bbb;
+}
+
+button{
+padding:8px 12px;
+margin-top:12px;
+border:1px solid #999;
+background:#e6e6e6;
+cursor:pointer;
+}
+
+button:hover{
+background:#dcdcdc;
+}
+
+/* PANEL */
+
+.panel{
+max-width:650px;
+width:90%;
+margin:40px auto;
+background:white;
+border:1px solid #ccc;
+padding:25px;
+}
+
+/* GRID */
+
+.formgrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin-top:10px;
+}
+
+.formgroup{
+display:flex;
+flex-direction:column;
+}
+
+label{
+font-weight:bold;
+margin-bottom:3px;
+}
+
+.full{
+grid-column:1 / 3;
+}
+
+input[readonly]{
+background:#f4f4f4;
+color:#555;
+}
+
+/* FOTO */
+
+.dropzone{
+border:2px dashed #aaa;
+padding:20px;
+text-align:center;
+background:#fafafa;
+cursor:pointer;
+margin-top:5px;
+}
+
+.dropzone.dragover{
+background:#e6f2ff;
+border-color:#3a7bd5;
+}
+
+.preview{
+margin-top:10px;
+width:140px;
+border:1px solid #aaa;
+display:none;
+}
+
+button[type="submit"]{
+grid-column:1 / 3;
+margin-top:15px;
+padding:10px;
+font-weight:bold;
+}
+
+#panelSistema{
+display:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<img src="logo_uaeh.png" class="logo">
+
+<div class="titles">
+
+<h1>Universidad Autónoma del Estado de Hidalgo</h1>
+<h2>Escuela Superior de Ciudad Sahagún</h2>
+<h3>Centro de Autoaprendizaje de Idiomas</h3>
+
+</div>
+
+</div>
+
+<div class="portalbar">
+Sistema de Carátulas CAI
+</div>
+
+<!-- LOGIN -->
+
+<div class="loginbox" id="panelLogin">
+
+<h3>Acceso con correo institucional</h3>
+
+<label>Correo institucional</label>
+<input type="email" id="correo" required>
+
+<button id="btnCodigo">Enviar código</button>
+
+<label>Código de verificación</label>
+<input type="text" id="codigo" required>
+
+<button id="btnAcceder">Acceder</button>
+
+<div id="msg"></div>
+
+</div>
+
+
+<!-- SISTEMA -->
+
+<div class="panel" id="panelSistema">
+
+<form id="formCaratula" action="/generar" method="POST" enctype="multipart/form-data">
+
+<input type="hidden" name="correo" id="correoHidden">
+
+<div class="formgrid">
+
+<div class="formgroup">
+<label>Nombre</label>
+<input type="text" name="nombre" required>
+</div>
+
+<div class="formgroup">
+<label>Número de cuenta</label>
+<input type="text" name="cuenta" id="cuentaHidden" readonly required>
+</div>
+
+<div class="formgroup">
+
+<label>Programa educativo</label>
+
+<select name="programa" required>
+
+<option value="">Seleccionar</option>
+<option>Bachillerato</option>
+<option>Licenciatura en Ingeniería Industrial</option>
+<option>Licenciatura en Ingeniería Mecánica</option>
+<option>Licenciatura en Contaduría</option>
+
+</select>
+
+</div>
+
+<div class="formgroup">
+<label>Semestre / Grupo</label>
+<input type="text" name="semestre" required>
+</div>
+
+<div class="formgroup">
+<label>Materia</label>
+<input type="text" name="materia" required>
+</div>
+
+<div class="formgroup">
+<label>Nombre del profesor</label>
+<input type="text" name="profesor" required>
+</div>
+
+<div class="formgroup">
+<label>Nivel de inglés</label>
+<input type="text" name="nivel" required>
+</div>
+
+<div class="formgroup">
+
+<label>Periodo</label>
+
+<select name="periodo" required>
+<option value="">Seleccionar</option>
+<option>Enero - Junio</option>
+<option>Julio - Diciembre</option>
+</select>
+
+</div>
+
+<div class="formgroup full">
+
+<label>Año</label>
+<input type="number" name="anio" required>
+
+</div>
+
+<div class="formgroup full">
+
+<label>Fotografía</label>
+
+<div class="dropzone" id="dropzone">
+Arrastra la fotografía aquí o haz clic para seleccionar
+<input type="file" name="foto" id="foto" style="display:none" required>
+</div>
+
+<img id="preview" class="preview">
+
+</div>
+
+<button type="submit">
+Generar PDF
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+<script>
+
+/* ELEMENTOS */
+
+const correo=document.getElementById("correo")
+const codigo=document.getElementById("codigo")
+
+const btnCodigo=document.getElementById("btnCodigo")
+const btnAcceder=document.getElementById("btnAcceder")
+
+const msg=document.getElementById("msg")
+
+const panelLogin=document.getElementById("panelLogin")
+const panelSistema=document.getElementById("panelSistema")
+
+const cuentaHidden=document.getElementById("cuentaHidden")
+const correoHidden=document.getElementById("correoHidden")
+
+const dropzone=document.getElementById("dropzone")
+const foto=document.getElementById("foto")
+const preview=document.getElementById("preview")
+
+const form=document.getElementById("formCaratula")
+
+/* SESION */
+
+const SESSION_TIME=10*60*1000
+
+function guardarSesion(correo){
+
+localStorage.setItem("caiCorreo",correo)
+localStorage.setItem("caiLoginTime",Date.now())
+
+}
+
+function verificarSesion(){
+
+const correoGuardado=localStorage.getItem("caiCorreo")
+const tiempo=localStorage.getItem("caiLoginTime")
+
+if(!correoGuardado||!tiempo) return
+
+if(Date.now()-tiempo>SESSION_TIME){
+
+localStorage.clear()
+return
+
+}
+
+const parte=correoGuardado.split("@")[0]
+const numeros=parte.match(/\d+/)
+
+const cuenta=numeros?numeros[0]:""
+
+cuentaHidden.value=cuenta
+correoHidden.value=correoGuardado
+
+panelLogin.style.display="none"
+panelSistema.style.display="block"
+
+}
+
+verificarSesion()
+
+/* ENVIAR CODIGO */
+
+btnCodigo.onclick=async()=>{
+
+msg.innerHTML="Enviando código..."
+
+const res=await fetch("/request-code",{
+
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({correo:correo.value})
+
+})
+
+const data=await res.json()
+
+msg.innerHTML=res.ok ? "Código enviado al correo" : data.error
+
+}
+
+/* ACCEDER */
+
+btnAcceder.onclick=async()=>{
+
+const res=await fetch("/verify-code",{
+
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+
+correo:correo.value,
+code:codigo.value
+
+})
+
+})
+
+const data=await res.json()
+
+if(res.ok){
+
+const parte=correo.value.split("@")[0]
+const numeros=parte.match(/\d+/)
+
+const cuenta=numeros?numeros[0]:""
+
+cuentaHidden.value=cuenta
+correoHidden.value=correo.value
+
+guardarSesion(correo.value)
+
+panelLogin.style.display="none"
+panelSistema.style.display="block"
+
+}else{
+
+msg.innerHTML=data.error
+
+}
+
+}
+
+/* FOTO */
+
+dropzone.onclick=()=>foto.click()
+
+foto.onchange=()=>mostrarFoto(foto.files[0])
+
+dropzone.addEventListener("dragover",e=>{
+
+e.preventDefault()
+dropzone.classList.add("dragover")
+
+})
+
+dropzone.addEventListener("dragleave",()=>{
+
+dropzone.classList.remove("dragover")
+
+})
+
+dropzone.addEventListener("drop",e=>{
+
+e.preventDefault()
+
+dropzone.classList.remove("dragover")
+
+const file=e.dataTransfer.files[0]
+
+foto.files=e.dataTransfer.files
+
+mostrarFoto(file)
+
+})
+
+function mostrarFoto(file){
+
+if(file){
+
+preview.src=URL.createObjectURL(file)
+preview.style.display="block"
+
+}
+
+}
+
+/* DESCARGA AUTOMATICA PDF */
+
+form.addEventListener("submit",()=>{
+
+setTimeout(()=>{
+
+window.location.reload()
+
+},2000)
+
+})
+
+</script>
+
+</body>
+</html>
