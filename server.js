@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const PDFDocument = require("pdfkit");
 const bwipjs = require("bwip-js");
-const nodemailer = require("nodemailer");
+const sgMail = require('@sendgrid/mail');
 
 const app = express();
 
@@ -13,19 +13,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const codes = new Map();
 
-/* CORREO */
-
-const { Resend } = require('resend');
-const resend = new Resend('re_5yvWt2zp_4MBZotyAMFjSCRJnMX3W9Cie');  // <-- Reemplaza con tu API key real
-
-/* CORREO */
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY); // Pega aquí tu API Key
+// Configurar SendGrid con variable de entorno
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /* GENERAR CODIGO */
-
-function generarCodigo(){
-return Math.floor(100000 + Math.random()*900000).toString();
+function generarCodigo() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 /* ENVIAR CODIGO */
@@ -46,7 +39,7 @@ app.post("/request-code", async (req, res) => {
   try {
     const msg = {
       to: correo,
-      from: 'cai.essah.uaeh@gmail.com', // Debe ser el correo verificado
+      from: 'cai.essah.uaeh@gmail.com', // Asegúrate de haber verificado este remitente en SendGrid
       subject: "Código de verificación - CAI ESSAH UAEH",
       text: `Centro de Autoaprendizaje de Idiomas
 Escuela Superior de Ciudad Sahagún
@@ -64,30 +57,26 @@ Este código expira en 10 minutos.`
 });
 
 /* VERIFICAR CODIGO */
+app.post("/verify-code", (req, res) => {
+  const { correo, code } = req.body;
 
-app.post("/verify-code",(req,res)=>{
+  const data = codes.get(correo);
 
-const {correo,code}=req.body;
+  if (!data) {
+    return res.status(400).json({ error: "Primero solicita un código" });
+  }
 
-const data=codes.get(correo);
+  if (Date.now() > data.expires) {
+    codes.delete(correo);
+    return res.status(400).json({ error: "Código expirado" });
+  }
 
-if(!data){
-return res.status(400).json({error:"Primero solicita un código"});
-}
+  if (data.code !== code) {
+    return res.status(400).json({ error: "Código incorrecto" });
+  }
 
-if(Date.now()>data.expires){
-codes.delete(correo);
-return res.status(400).json({error:"Código expirado"});
-}
-
-if(data.code!==code){
-return res.status(400).json({error:"Código incorrecto"});
-}
-
-codes.delete(correo);
-
-res.json({ok:true});
-
+  codes.delete(correo);
+  res.json({ ok: true });
 });
 
 /* GENERAR PDF */
@@ -118,15 +107,15 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
 
   const rojoUAEH = "#8b0000";
 
-  // LOGO (subido 10 puntos: ahora en y=40)
+  // LOGO
   doc.image("public/logo_uaeh.png", 50, 40, { width: 120 });
 
-  // TEXTO SUPERIOR (alineado verticalmente con el logo)
+  // TEXTO SUPERIOR
   doc.fillColor(rojoUAEH).fontSize(16).text("Universidad Autónoma del Estado de Hidalgo", 175, 40);
   doc.font("Helvetica-Bold").fillColor("black").fontSize(14).text("Escuela Superior de Ciudad Sahagún", 175, 60);
   doc.font("Helvetica").text("Centro de Autoaprendizaje de Idiomas", 175, 80);
 
-  // CÓDIGO DE BARRAS (subido a y=80)
+  // CÓDIGO DE BARRAS
   try {
     const barcode = await bwipjs.toBuffer({
       bcid: "code128",
@@ -139,27 +128,27 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
     console.error("Error generando código de barras:", err);
   }
 
-  // Calcular posición del cuadro de datos basado en el código de barras
-  const barcodeHeight = 40; // altura estimada
-  const barcodeBottom = 80 + barcodeHeight; // 120
-  const datosTop = barcodeBottom + 20; // 140 (antes 150)
+  // Calcular posición del cuadro de datos
+  const barcodeHeight = 40;
+  const barcodeBottom = 80 + barcodeHeight;
+  const datosTop = barcodeBottom + 20;
 
-  // TÍTULO "CAI LEARNING ACTIVITY RECORD" justo arriba del cuadro
+  // TÍTULO
   doc.fillColor(rojoUAEH)
-     .fontSize(16)
-     .text("CAI LEARNING ACTIVITY RECORD", 50, datosTop - 20); // 120
+    .fontSize(16)
+    .text("CAI LEARNING ACTIVITY RECORD", 50, datosTop - 20);
 
-  // CUADRO DE DATOS PERSONALES (altura reducida a 171)
-  const cuadroAltura = 171; // ajustado para que la tabla quepa exactamente
+  // CUADRO DE DATOS PERSONALES
+  const cuadroAltura = 171;
   doc.rect(50, datosTop, 500, cuadroAltura).stroke();
 
-  // FOTO más grande (120x150)
+  // FOTO
   if (req.file) {
     doc.rect(420, datosTop + 10, 120, 150).stroke();
     doc.image(req.file.buffer, 425, datosTop + 15, { width: 110 });
   }
 
-  // DATOS PERSONALES (sin correo)
+  // DATOS PERSONALES
   doc.fillColor("black").fontSize(11);
   let y = datosTop + 20;
 
@@ -178,30 +167,30 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
   campo("English Level:", nivel);
   campo("Academic Period:", periodo + " " + anio);
 
-  // TABLA DE ACTIVIDADES (con altura de fila 33 para que quepa)
-  const tableTop = datosTop + cuadroAltura + 10; // 140+171+10 = 321
-  const rowHeight = 33; // reducido de 35 a 33
-  const tableHeight = 25 + 12 * rowHeight; // 25 + 396 = 421
+  // TABLA DE ACTIVIDADES
+  const tableTop = datosTop + cuadroAltura + 10;
+  const rowHeight = 33;
+  const tableHeight = 25 + 12 * rowHeight;
 
   doc.fontSize(11).font("Helvetica-Bold");
 
-  // Rectángulo exterior de la tabla
+  // Rectángulo exterior
   doc.rect(50, tableTop, 500, tableHeight).stroke();
 
-  // Encabezados de columna (5 columnas)
+  // Encabezados
   doc.text("DATE", 70, tableTop + 7);
   doc.text("TIME", 140, tableTop + 7);
   doc.text("AREA", 220, tableTop + 7);
   doc.text("TUTOR'S SIGNATURE", 285, tableTop + 7);
   doc.text("STAMP / OBSERVATIONS", 410, tableTop + 7);
 
-  // Líneas verticales entre columnas
+  // Líneas verticales
   const colPos = [50, 120, 190, 280, 400, 550];
   for (let i = 1; i < colPos.length - 1; i++) {
     doc.moveTo(colPos[i], tableTop).lineTo(colPos[i], tableTop + tableHeight).stroke();
   }
 
-  // Filas horizontales (12 filas)
+  // Filas horizontales
   doc.font("Helvetica");
   for (let i = 0; i < 12; i++) {
     const yLine = tableTop + 25 + i * rowHeight;
@@ -212,7 +201,6 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
 });
 
 /* SERVIDOR */
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
