@@ -16,11 +16,11 @@ const codes = new Map();
 /* CORREO */
 
 const transporter = nodemailer.createTransport({
-service:"gmail",
-auth:{
-user:"cai.essah.uaeh@gmail.com",
-pass:"zqlx jlhx icap jsba"
-}
+  service: "gmail",
+  auth: {
+    user: "cai.essah.uaeh@gmail.com",
+    pass: process.env.EMAIL_PASS
+  }
 });
 
 /* GENERAR CODIGO */
@@ -226,6 +226,7 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
 
 /* SERVIDOR */
 
-app.listen(3000,()=>{
-console.log("Servidor corriendo en http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Servidor corriendo en puerto " + PORT);
 });
