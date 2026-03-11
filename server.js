@@ -16,11 +16,20 @@ const codes = new Map();
 /* CORREO */
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true para 465, false para 587
   auth: {
     user: "cai.essah.uaeh@gmail.com",
     pass: process.env.EMAIL_PASS
-  }
+  },
+  tls: {
+    // No verificar el certificado (opcional, pero a veces necesario en entornos cloud)
+    rejectUnauthorized: false
+  },
+  // Forzar el uso de IPv4
+  connectionTimeout: 60000, // Aumentar timeout si es necesario
+  socketTimeout: 60000
 });
 
 /* GENERAR CODIGO */
