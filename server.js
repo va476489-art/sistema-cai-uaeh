@@ -18,6 +18,10 @@ const codes = new Map();
 const { Resend } = require('resend');
 const resend = new Resend('re_5yvWt2zp_4MBZotyAMFjSCRJnMX3W9Cie');  // <-- Reemplaza con tu API key real
 
+/* CORREO */
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY); // Pega aquí tu API Key
+
 /* GENERAR CODIGO */
 
 function generarCodigo(){
@@ -40,9 +44,9 @@ app.post("/request-code", async (req, res) => {
   });
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Sistema CAI ESSAH <onboarding@resend.dev>", // Remitente temporal
-      to: [correo],
+    const msg = {
+      to: correo,
+      from: 'cai.essah.uaeh@gmail.com', // Debe ser el correo verificado
       subject: "Código de verificación - CAI ESSAH UAEH",
       text: `Centro de Autoaprendizaje de Idiomas
 Escuela Superior de Ciudad Sahagún
@@ -50,16 +54,11 @@ Universidad Autónoma del Estado de Hidalgo
 
 Tu código de verificación es: ${code}
 Este código expira en 10 minutos.`
-    });
-
-    if (error) {
-      console.error("Error de Resend:", error);
-      return res.status(500).json({ error: "Error enviando correo" });
-    }
-
+    };
+    await sgMail.send(msg);
     res.json({ ok: true });
   } catch (error) {
-    console.log("Excepción:", error);
+    console.error("Error de SendGrid:", error.response?.body || error);
     res.status(500).json({ error: "Error enviando correo" });
   }
 });
