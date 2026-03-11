@@ -14,7 +14,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const codes = new Map();
 
 // Configurar SendGrid con variable de entorno
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+sgMail.setApiKey('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');
 
 /* GENERAR CODIGO */
 function generarCodigo() {
