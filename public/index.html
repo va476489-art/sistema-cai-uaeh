@@ -101,6 +101,32 @@ border:1px solid #ccc;
 padding:25px;
 }
 
+/* Estilo para la cabecera del panel con botón de cerrar sesión */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.panel-header h3 {
+    margin: 0;
+    color: #b30000;
+}
+
+.btn-cerrar {
+    background: #b30000;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btn-cerrar:hover {
+    background: #8b0000;
+}
+
 /* GRID */
 
 .formgrid{
@@ -211,6 +237,11 @@ Sistema de Carátulas CAI
 <!-- SISTEMA -->
 
 <div class="panel" id="panelSistema">
+    <!-- Cabecera con botón de cerrar sesión -->
+    <div class="panel-header">
+        <h3>Sistema de Carátulas</h3>
+        <button id="btnCerrarSesion" class="btn-cerrar">Cerrar sesión</button>
+    </div>
 
 <form id="formCaratula" action="/generar" method="POST" enctype="multipart/form-data">
 
@@ -487,6 +518,23 @@ window.location.reload()
 },2000)
 
 })
+
+/* CERRAR SESIÓN */
+const btnCerrarSesion = document.getElementById("btnCerrarSesion");
+btnCerrarSesion.addEventListener("click", function() {
+    // Eliminar datos de localStorage
+    localStorage.removeItem("caiCorreo");
+    localStorage.removeItem("caiLoginTime");
+    // Ocultar panel de sistema y mostrar panel de login
+    panelSistema.style.display = "none";
+    panelLogin.style.display = "block";
+    // Limpiar el formulario y la previsualización
+    form.reset();
+    preview.style.display = "none";
+    preview.src = "";
+    // Limpiar mensajes
+    msg.innerHTML = "";
+});
 
 </script>
 
