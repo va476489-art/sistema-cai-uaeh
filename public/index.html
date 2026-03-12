@@ -507,17 +507,22 @@ preview.style.display="block"
 
 }
 
-/* DESCARGA AUTOMATICA PDF */
-
-form.addEventListener("submit",()=>{
-
-setTimeout(()=>{
-
-window.location.reload()
-
-},2000)
-
-})
+/* DESCARGA AUTOMATICA PDF - MEJORADA */
+form.addEventListener("submit", function(e) {
+    // No hacer nada especial, el formulario se envía normalmente.
+    // Opcional: mostrar un mensaje de "Generando PDF..." y deshabilitar el botón para evitar múltiples envíos.
+    const btnSubmit = document.querySelector('button[type="submit"]');
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "Generando...";
+    
+    // El formulario se enviará y la página no se recargará automáticamente.
+    // El navegador manejará la descarga del PDF.
+    // Después de un tiempo, puedes volver a habilitar el botón (pero no recargar).
+    setTimeout(() => {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Generar PDF";
+    }, 5000); // 5 segundos es un tiempo razonable para que la descarga comience.
+});
 
 /* CERRAR SESIÓN */
 const btnCerrarSesion = document.getElementById("btnCerrarSesion");
