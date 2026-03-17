@@ -3,7 +3,7 @@ const multer = require("multer");
 const PDFDocument = require("pdfkit");
 const bwipjs = require("bwip-js");
 const sgMail = require('@sendgrid/mail');
-const sizeOf = require('image-size'); // Cambiado a sizeOf
+const sharp = require('sharp'); // Cambiamos a sharp
 require('dotenv').config();
 
 const app = express();
@@ -144,15 +144,15 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
   const cuadroAltura = 171;
   doc.rect(50, datosTop, 500, cuadroAltura).stroke();
 
-  // FOTO - con ajuste de tamaño y centrado
+  // FOTO - con ajuste de tamaño y centrado usando sharp
   if (req.file) {
     // Dibujar el rectángulo del marco de la foto
     doc.rect(420, datosTop + 10, 120, 150).stroke();
 
-    // Obtener dimensiones de la imagen subida
-    const dimensions = sizeOf(req.file.buffer); // Usamos sizeOf
-    const anchoImg = dimensions.width;
-    const altoImg = dimensions.height;
+    // Obtener dimensiones de la imagen subida usando sharp
+    const metadata = await sharp(req.file.buffer).metadata();
+    const anchoImg = metadata.width;
+    const altoImg = metadata.height;
 
     // Espacio máximo disponible dentro del rectángulo (considerando un pequeño margen)
     const maxAncho = 110; // 120 - 10 de margen horizontal (5+5)
