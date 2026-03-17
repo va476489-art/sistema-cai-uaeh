@@ -4,6 +4,7 @@ const PDFDocument = require("pdfkit");
 const bwipjs = require("bwip-js");
 const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
+const size = require('image-size'); // <-- NUEVA DEPENDENCIA
 
 const app = express();
 
@@ -143,10 +144,34 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
   const cuadroAltura = 171;
   doc.rect(50, datosTop, 500, cuadroAltura).stroke();
 
-  // FOTO
+  // FOTO (con ajuste de tamaño y centrado)
   if (req.file) {
+    // Dibujar el rectángulo del marco de la foto
     doc.rect(420, datosTop + 10, 120, 150).stroke();
-    doc.image(req.file.buffer, 425, datosTop + 15, { width: 110 });
+
+    // Obtener dimensiones de la imagen subida
+    const dimensions = size(req.file.buffer);
+    const anchoImg = dimensions.width;
+    const altoImg = dimensions.height;
+
+    // Espacio máximo disponible dentro del rectángulo (considerando un pequeño margen)
+    const maxAncho = 110; // 120 de ancho - 10 de margen horizontal (5+5)
+    const maxAlto = 140;  // 150 de alto - 10 de margen vertical (5+5)
+
+    // Calcular escala para que quepa sin deformarse
+    const escalaAncho = maxAncho / anchoImg;
+    const escalaAlto = maxAlto / altoImg;
+    const escala = Math.min(escalaAncho, escalaAlto); // usar la más pequeña para que quepa completa
+
+    const nuevoAncho = anchoImg * escala;
+    const nuevoAlto = altoImg * escala;
+
+    // Calcular posición para centrar la imagen dentro del rectángulo
+    const xImagen = 420 + (120 - nuevoAncho) / 2;
+    const yImagen = datosTop + 10 + (150 - nuevoAlto) / 2;
+
+    // Insertar la imagen con las nuevas dimensiones
+    doc.image(req.file.buffer, xImagen, yImagen, { width: nuevoAncho, height: nuevoAlto });
   }
 
   // DATOS PERSONALES
