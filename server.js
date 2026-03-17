@@ -3,8 +3,8 @@ const multer = require("multer");
 const PDFDocument = require("pdfkit");
 const bwipjs = require("bwip-js");
 const sgMail = require('@sendgrid/mail');
+const sizeOf = require('image-size'); // Cambiado a sizeOf
 require('dotenv').config();
-const size = require('image-size'); // <-- NUEVA DEPENDENCIA
 
 const app = express();
 
@@ -41,7 +41,7 @@ app.post("/request-code", async (req, res) => {
   try {
     const msg = {
       to: correo,
-      from: 'cai.essah.uaeh@gmail.com', // Asegúrate de haber verificado este remitente en SendGrid
+      from: 'cai.essah.uaeh@gmail.com',
       subject: "Código de verificación - CAI ESSAH UAEH",
       text: `Centro de Autoaprendizaje de Idiomas
 Escuela Superior de Ciudad Sahagún
@@ -144,19 +144,19 @@ app.post("/generar", upload.single("foto"), async (req, res) => {
   const cuadroAltura = 171;
   doc.rect(50, datosTop, 500, cuadroAltura).stroke();
 
-  // FOTO (con ajuste de tamaño y centrado)
+  // FOTO - con ajuste de tamaño y centrado
   if (req.file) {
     // Dibujar el rectángulo del marco de la foto
     doc.rect(420, datosTop + 10, 120, 150).stroke();
 
     // Obtener dimensiones de la imagen subida
-    const dimensions = size(req.file.buffer);
+    const dimensions = sizeOf(req.file.buffer); // Usamos sizeOf
     const anchoImg = dimensions.width;
     const altoImg = dimensions.height;
 
     // Espacio máximo disponible dentro del rectángulo (considerando un pequeño margen)
-    const maxAncho = 110; // 120 de ancho - 10 de margen horizontal (5+5)
-    const maxAlto = 140;  // 150 de alto - 10 de margen vertical (5+5)
+    const maxAncho = 110; // 120 - 10 de margen horizontal (5+5)
+    const maxAlto = 140;  // 150 - 10 de margen vertical (5+5)
 
     // Calcular escala para que quepa sin deformarse
     const escalaAncho = maxAncho / anchoImg;
